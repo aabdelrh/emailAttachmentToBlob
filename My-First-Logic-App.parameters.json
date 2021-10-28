@@ -1,0 +1,23 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_My_First_Logic_App_name": {
+            "value": "My-First-Logic-App"
+        },
+        "workflows_My-First-Logic-App_parameters_$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/azureblob"
+                },
+                "outlook_1": {
+                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/outlook-2",
+                    "connectionName": "outlook-2",
+                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
+                }
+            }
+        }
+    }
+}

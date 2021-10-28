@@ -1,0 +1,222 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_My_First_Logic_App_name": {
+            "defaultValue": "My-First-Logic-App",
+            "type": "string"
+        },
+        "workflows_My-First-Logic-App_parameters_$connections": {
+            "defaultValue": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/azureblob"
+                },
+                "outlook_1": {
+                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/outlook-2",
+                    "connectionName": "outlook-2",
+                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
+                }
+            },
+            "type": "Object"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-07-01",
+            "dependsOn": [],
+            "location": "northcentralus",
+            "name": "[parameters('workflows_My_First_Logic_App_name')]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {
+                                "azureblob": {
+                                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/azureblob",
+                                    "connectionName": "azureblob",
+                                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/azureblob"
+                                },
+                                "outlook_1": {
+                                    "connectionId": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/resourceGroups/My-First-LA-RG/providers/Microsoft.Web/connections/outlook-2",
+                                    "connectionName": "outlook-2",
+                                    "id": "/subscriptions/8fd4088d-8867-4f3a-9705-62c6ebd6b1b2/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
+                                }
+                            },
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_new_email_arrives_(V2)": {
+                            "splitOn": "@triggerBody()?['value']",
+                            "type": "ApiConnectionNotification",
+                            "inputs": {
+                                "fetch": {
+                                    "method": "get",
+                                    "pathTemplate": {
+                                        "template": "/v2/Mail/OnNewEmail"
+                                    },
+                                    "queries": {
+                                        "fetchOnlyWithAttachment": true,
+                                        "folderPath": "Inbox",
+                                        "importance": "Any",
+                                        "includeAttachments": true
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['outlook_1']['connectionId']"
+                                    }
+                                },
+                                "subscribe": {
+                                    "body": {
+                                        "NotificationUrl": "@{listCallbackUrl()}"
+                                    },
+                                    "method": "post",
+                                    "pathTemplate": {
+                                        "template": "/MailSubscriptionPoke/$subscriptions"
+                                    },
+                                    "queries": {
+                                        "fetchOnlyWithAttachment": true,
+                                        "folderPath": "Inbox",
+                                        "importance": "Any"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "For_each": {
+                            "foreach": "@triggerBody()?['Attachments']",
+                            "actions": {
+                                "Condition_2": {
+                                    "actions": {
+                                        "Create_blob_(V2)": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": "@items('For_each')",
+                                                "headers": {
+                                                    "ReadFileMetadataFromServer": true
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                                "queries": {
+                                                    "folderPath": "/csv",
+                                                    "name": "@items('For_each')?['Name']",
+                                                    "queryParametersSingleEncoded": true
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "contentTransfer": {
+                                                    "transferMode": "Chunked"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Get_attachment": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@items('For_each')?['ContentType']",
+                                                    "text/csv"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Condition_3": {
+                                    "actions": {
+                                        "Create_blob_(V2)_3": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": "@items('For_each')",
+                                                "headers": {
+                                                    "ReadFileMetadataFromServer": true
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                                "queries": {
+                                                    "folderPath": "/images",
+                                                    "name": "@items('For_each')?['Name']",
+                                                    "queryParametersSingleEncoded": true
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "contentTransfer": {
+                                                    "transferMode": "Chunked"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Get_attachment": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "startsWith": [
+                                                    "@items('For_each')?['ContentType']",
+                                                    "image"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Get_attachment": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['outlook_1']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/Mail/@{encodeURIComponent(triggerBody()?['Id'])}/Attachments/@{encodeURIComponent(items('For_each')?['Id'])}"
+                                    }
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "Foreach"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": "[parameters('workflows_My-First-Logic-App_parameters_$connections')]"
+                    }
+                },
+                "state": "Enabled"
+            },
+            "scale": null,
+            "tags": {},
+            "type": "Microsoft.Logic/workflows"
+        }
+    ],
+    "variables": {}
+}
