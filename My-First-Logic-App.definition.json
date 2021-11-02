@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "workflows_My_First_Logic_App_name": {
@@ -98,7 +98,7 @@
                                             "runAfter": {},
                                             "type": "ApiConnection",
                                             "inputs": {
-                                                "body": "@items('For_each')",
+                                                "body": "@base64ToBinary(items('For_each')?['ContentBytes'])",
                                                 "headers": {
                                                     "ReadFileMetadataFromServer": true
                                                 },
@@ -145,7 +145,7 @@
                                             "runAfter": {},
                                             "type": "ApiConnection",
                                             "inputs": {
-                                                "body": "@items('For_each')",
+                                                "body": "@base64ToBinary(items('For_each')?['ContentBytes'])",
                                                 "headers": {
                                                     "ReadFileMetadataFromServer": true
                                                 },
